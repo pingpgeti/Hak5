@@ -1,0 +1,17 @@
+MATCH (logowanie|haslo|bank|eduroam|mojapg|sis|enauczanie) # activator
+Q DELAY 500
+
+# sending alert to Discord via webhook
+curl -H "Content-Type: application/json" -d '{"content": "🚨 **ALARM!** KeyCroc aktywowany!"}' https://discord.com/api/webhooks/1501579399416385606/4F2UsJT3GiPaUBwNsonQXl8fKfSsUUVZARFHJAEirb9BNMpUKreVb5RfTbESL8RBKMFS &
+Q DELAY 500
+
+Q GUI r # running Win+R
+Q DELAY 500
+
+Q STRING notepad.exe # opening notepad
+Q ENTER
+
+Q DELAY 1000
+
+Q STRING "Uwaga! Nigdy nie podpinaj niezaufanych USB!" # typing
+Q ENTER
