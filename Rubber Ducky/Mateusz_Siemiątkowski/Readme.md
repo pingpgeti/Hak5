@@ -24,7 +24,7 @@ For convinience the target location is defined by [target.txt](#targettxt).
 So you do not have to manually change it inside the script.\
 When an encrypted pdf file is found, it is copied into prior created folder.
 Afterwords the script cover it's tracks by deleting history of recently accesed files and commands started via run window.\
-Lastly the script will signalize end of the task by turnning `CAPSLOCK` key on and off three times.
+Lastly the script will signalize end of the task by turning `CAPSLOCK` key on and off three times.
 
 ## How to use
 
