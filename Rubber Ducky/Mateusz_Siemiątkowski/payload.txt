@@ -1,11 +1,10 @@
 REM_BLOCK DOCUMENTATION
+        AUTHOR:
+                Siemiątkowski Mateusz
         USAGE:
-            Simple payload to copy password protected pdf files from target location to USB Rubber Ducky in folder with target machine name.
-            For easy access target location is defined in file "target.txt" as to not generate payload each time when you want to change target.
-            In case there is no target.txt file the payload will asume $env:USERPROFILE\Downloads by default
-
+                Simple payload to load previously prepared powershell script, stored on Rubber Ducky.
         TARGETS:
-            Machines with Windows operating system
+                Machines with Windows operating system.
 END_REM
 
 DELAY 3000
