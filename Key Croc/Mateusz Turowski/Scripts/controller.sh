@@ -366,7 +366,7 @@ run_search() {
 	if [ -z "$hits" ]; then
 		echo "Nothing found."
 	else
-		echo "$hits"
+		echo "$hits" | grep --color=always -- "$phrase"
 		echo ""
 		read -p "Save to matches.log? [y/N] " save
 		if yes_no "$save"; then
