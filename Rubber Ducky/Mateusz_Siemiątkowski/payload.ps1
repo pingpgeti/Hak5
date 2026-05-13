@@ -1,4 +1,5 @@
-﻿
+#Author: Siemiątkowski Mateusz
+ 
 #Check the volume letter of DUCKY and create folder on it with the same name as the computer, if does not exists already 
 $m = (Get-Volume -FileSystemLabel "DUCKY").DriveLetter
 $DestDir = "$($m):\$($env:computername)"
