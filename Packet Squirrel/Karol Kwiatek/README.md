@@ -6,6 +6,23 @@
 
 ---
 
+## Motivation
+
+I decided to choose this project because I felt that computer networks were my weak point. While I am comfortable with software development and embedded systems, network infrastructure, routing, and low-level traffic manipulation always seemed somewhat abstract to me. I wanted to step out of my comfort zone and expand my knowledge in this area. Using the Hak5 Packet Squirrel MK1 provided the perfect hands-on opportunity to bridge the gap between theoretical network concepts and practical, real-world security applications.
+
+---
+
+## What I Learned
+
+Working on this project provided me with a deep, practical understanding of network protocols and security vulnerabilities. Key takeaways include:
+
+* **Low-Level Traffic Analysis:** I learned how to passively intercept and analyze raw network packets using `tcpdump` and Wireshark, gaining insight into how data is transmitted in plain text across unencrypted protocols.
+* **Traffic Manipulation with iptables:** I gained hands-on experience writing routing rules and configuring `iptables` to actively manipulate traffic. This included selective packet dropping (sending TCP RST packets) and redirecting traffic to a rogue local server for DNS spoofing.
+* **Working with Hardware Constraints:** The limited resources of the Packet Squirrel (64 MB RAM, 400 MHz CPU) taught me how to optimize payloads. I learned firsthand that heavy cryptographic protocols like OpenVPN can overwhelm small devices, making lightweight alternatives like Reverse SSH Tunnels much more effective for remote implants.
+* **The Importance of Defense-in-Depth:** Successfully executing Man-in-the-Middle attacks highlighted exactly why modern security standards are critical. I now clearly understand the practical impact of HSTS for enforcing encryption, DoH (DNS over HTTPS) for preventing spoofing, and 802.1X for port-level physical security.
+
+---
+
 ## Overview
 
 The **Packet Squirrel MK1** is a pocket-sized MITM device by Hak5. It sits physically inline between a target and the network — all traffic flows through it. This project provides a collection of attack payloads and a presentation demonstrating various offensive and defensive techniques.
