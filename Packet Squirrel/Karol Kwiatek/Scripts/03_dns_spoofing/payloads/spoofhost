@@ -1,0 +1,5 @@
+# DNS Spoofing – konfiguracja przekierowań (format dnsmasq)
+address=/testphp.vulnweb.com/172.16.32.1
+address=/neverssl.com/172.16.32.1
+address=/httpbin.org/172.16.32.1
+address=/httpforever.com/172.16.32.1
