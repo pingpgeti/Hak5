@@ -74,6 +74,8 @@ opkg update
 
 ## How it works ( Must read )
 
+The main purpose of this payload is to perform network recon using the Router's LAN port. Once the Shark Jack is connected with its RJ45 end it will start the attack ( in attack mode of course ). Shark Jack is like a mini linux computer, that runs bash scrips hiding from scanning and detection as a Network device. There are a lot of technical information ( from my experience ) about the SJC, but it mostly comes to management and execution. In case of this particular script, SJC changes its NETMODE ( its how the Shark Jack behaves, if its acting as a DHCP server or DHCP client ) to DHCP_CLIENT to not only get itself an IP address, but hide itself, avoiding confilt on the network. Once everything is ready, the rest of the scripts executes with no issues. I used tools like nmap and tcpdump, that are pre-installed on Shark and as said above, due to the issues with repositories I couldn't add packages and tools I wanted to test out as well. Its not a complicated script, but it shows the mechanic and powerfull side of SJC as mutliple usage type tool, that is fast, silent and can attack not only networks, but the devices directly too.
+
 ---
 
 ## File Structure
@@ -259,6 +261,13 @@ SERIAL_WRITE "    - SUMMARY.txt"
 
 LED FINISH
 ```
+
+**Short Explanation**  
+This payload can be divided into few sections: **Setup, Deep scanning, Aggressive scanning, Traffic capture and Clean up**.  
+During setup SJC changes its netmode to **DHCP_CLIENT**, meaning that for now on it will act as a guest and receive its own IP address. Based on that, Shark extracts information about the gateway and subnet to gather information for nmap usage. During Deep scanning, nmap scans for alive hosts on network, later on using that data to scan them ( names, open ports, IP addresses, MAC addresses etc. ).   
+Then comes Aggressive scanning, which in this case, for testing and because of the packages issues, scans the first target it found, checking it ports, OS system and more ( at first it was supposed to be arp spoofing mechanic with MITM type of performance, but packages were not very cooparative ).   
+At last there is traffic scanning, which does 3 things: Checks the MDNS devices, performs arp checks between devices on eth0 interface and checks for HTTP traffic, if there are any.  
+After all is done as saved to .txt files, there is a clean up section, where I kill active processes and generate summary files.
 
 ---
 
