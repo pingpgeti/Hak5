@@ -12,12 +12,11 @@ via RJ45, the script autonomously performs:
 4. **Gateway Audit** (Detailed scan of the router/gateway)
 5. **Aggressive OS Fingerprinting** (Operating system detection)
 6. **Passive Traffic Analysis** (MDNS, ARP, HTTP broadcast capture)
-7. **Automated Report Generation** (Timestamped loot folder)
 
 All results are saved to a **scan_results** and **audit_results** in `/root/loot/` for later
 retrieval via SSH or SCP.
 
-> ⚠️ **DISCLAIMER:** This project was created strictly for **educational and research purposes** in a **controlled, isolated lab environment.** The techniques demonstrated here should **never** be used against systems you do not own or have explicit written permission to test. Unauthorized use of these tools is illegal and unethical.
+> **DISCLAIMER:** This project was created strictly for **educational and research purposes** in a **controlled, isolated lab environment.** The techniques demonstrated here should **never** be used against systems you do not own or have explicit written permission to test. Unauthorized use of these tools is illegal and unethical.
 
 ---
 
@@ -42,7 +41,10 @@ retrieval via SSH or SCP.
 - `bash` - Script interpreter
 - `openssh` - SSH server
 
-### Repository Note (Important):
+### Repository Note ( Important ):
+
+Unfortunatly, during my testing of Shark Jack, it turned out that the version it was refering to during updates and in general no longer are there, or have been moved. I had to check through system files and try to find different, suitable packages to make it possible to run some of the mechanics. I wasn't able to perform my original idea of ARP spoofing, as the tool I need ( and dsniff package ) were not added in this version. There is also issue with certificates being expired by now. Down below I left few steps how to overcome some of the errors.
+
 The default Hak5 package repository
 (`http://downloads.hak5.org/packages/shark/1907/`) is **no longer active**.
 The OpenWrt 18.06-SNAPSHOT repositories have also been deprecated.
@@ -70,6 +72,10 @@ opkg update
 
 ---
 
+## How it works ( Must read )
+
+---
+
 ## File Structure
 
 ```
@@ -90,6 +96,168 @@ opkg update
         └── http_traffic.txt    ← Unencrypted HTTP traffic
     └── audit_results/  ← OS and service fingerprinting
         └── detailed_audit_192.168.X.X.txt
+```
+
+---
+
+## File Documentation
+
+```bash
+#!/bin/bash
+
+# TITLE: Network Recon and Aggressive Scanning
+# AUTHOR: Szymon Stefański ( KN PING GDAŃSK )
+# DESCRIPTION: This script performs a network scan to discover alive hosts
+# and runs aggressive scans on the first discovered host. It also captures
+# some passive network intelligence
+# VERSION: 2.0
+
+LOOT_DIR_SCAN="/root/loot/scan_results"
+LOOT_DIR_AUDIT="/root/loot/audit_results"
+SCAN_TIME=$(date +"%Y-%m-%d_%H-%M-%S")
+mkdir -p $LOOT_DIR_SCAN
+mkdir -p $LOOT_DIR_AUDIT
+
+# >>>>> SETUP <<<<<
+
+# Setting up client mode for stealth and Internet access
+
+LED SETUP
+SERIAL_WRITE "[*] Configuring network..." # SERIAL_WRITE is used to send messages to the serial console
+NETMODE DHCP_CLIENT
+sleep 10
+
+# Gathering network information and Shark Jack's IP address
+
+IP=""
+TIMEOUT=0
+while [ -z "$IP" ]; do
+    IP=$(ifconfig eth0 | grep 'inet' | awk -F: '{print $2}' | awk '{print $1}')
+    # we check interface eth0 for the assigned IP address
+    # then using grep we select IPv4 line
+    # awk is used to extract the IP address from the output
+    sleep 2
+    TIMEOUT=$((TIMEOUT + 2))
+    if [ $TIMEOUT -ge 30 ]; then
+        SERIAL_WRITE "[!] Failed to obtain IP address."
+        LED FAIL
+        exit 1
+    fi
+done
+
+GATEWAY=$(route -n | grep 'UG' | awk '{print $2}')
+SUBNET=$(echo $IP | awk -F. '{print $1"."$2"."$3".0/24"}')
+# We set the subnet based on the Shark Jack's IP, asuming a /24 network
+
+# Save network info to network_info.txt
+
+echo "============================================" > $LOOT_DIR_SCAN/network_info.txt
+echo "Shark Jack Network Report" >> $LOOT_DIR_SCAN/network_info.txt
+echo "Scan Time: $SCAN_TIME" >> $LOOT_DIR_SCAN/network_info.txt
+echo "============================================" >> $LOOT_DIR_SCAN/network_info.txt
+echo "SJC IP: $IP" >> $LOOT_DIR_SCAN/network_info.txt
+echo "Gateway: $GATEWAY" >> $LOOT_DIR_SCAN/network_info.txt
+echo "Subnet: $SUBNET" >> $LOOT_DIR_SCAN/network_info.txt
+echo "============================================" >> $LOOT_DIR_SCAN/network_info.txt
+
+SERIAL_WRITE "[*] IP: $IP"
+SERIAL_WRITE "[*] Gateway: $GATEWAY"
+SERIAL_WRITE "[*] Subnet: $SUBNET"
+
+# >>>>> HOST DISCOVERY AND DEEP SCANNING <<<<<
+
+# Host discovery and deep scanning
+
+LED ATTACK
+SERIAL_WRITE "[*] Discovering alive hosts..."
+nmap -sn $SUBNET -oG $LOOT_DIR_SCAN/alive_hosts.txt
+
+# Count alive hosts ( we exclude the gateway and the Shark Jack itself using grep -v )
+
+HOST_COUNT=$(grep "Up" $LOOT_DIR_SCAN/alive_hosts.txt | grep -v "$GATEWAY" | grep -v "$IP" | wc -l)
+ALIVE_HOSTS=$(grep "Up" $LOOT_DIR_SCAN/alive_hosts.txt | grep -v "$GATEWAY" | grep -v "$IP" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')
+
+if [ -z "$ALIVE_HOSTS" ]; then
+    SERIAL_WRITE "[!] No targets found on the network."
+    LED FAIL
+    exit 1
+fi
+
+SERIAL_WRITE "[*] Deep port scanning all alive hosts..."
+nmap -sV -O -T4 --top-ports 100 $SUBNET -oN $LOOT_DIR_SCAN/deep_scan.txt
+sleep 5
+nmap -sV -A $GATEWAY -oN $LOOT_DIR_SCAN/gateway_scan.txt
+
+# >>>>> AGGRESSIVE SCANNING <<<<<
+
+# We take the first alive host, better for testing reason
+# For production / real use it is recommended to implement logic to select the most interesting target
+# based on open ports and services or any other criteria.
+# For example based on deep_scan.txt and gateway_scan we could select hosts with specfic services
+# and / or ports open.
+
+TARGET_IP=$(echo "$ALIVE_HOSTS" | head -n 1)
+SERIAL_WRITE "[*] Aggressive scan on $TARGET_IP..."
+
+# Aggressive scan with OS detection, version detection, script scanning and traceroute
+# Limiting to top 20 ports, for speed and storage reasons on Shark Jack
+
+nmap -sV -O -A --osscan-guess --top-ports 20 $TARGET_IP -oN $LOOT_DIR_AUDIT/detailed_audit_$TARGET_IP.txt
+
+# >>>>> TRAFFIC CAPTURE <<<<<
+
+# Passive traffic capture for network intelligence
+
+SERIAL_WRITE "[*] Capturing broadcast traffic (60s)..."
+
+# Capture MDNS (device names and services)
+
+tcpdump -i eth0 -vv -t udp port 5353 -c 100 > $LOOT_DIR_SCAN/mdns_devices.txt 2>&1 &
+
+# Capture ARP traffic (who is talking to whom)
+
+tcpdump -i eth0 -n arp -c 100 > $LOOT_DIR_SCAN/arp_traffic.txt 2>&1 &
+
+# Capture any unencrypted HTTP traffic
+
+tcpdump -i eth0 -A -l -c 100 'tcp port 80' > $LOOT_DIR_SCAN/http_traffic.txt 2>&1 &
+
+sleep 60
+
+# >>>>> CLEANUP AND FINAL REPORT <<<<<
+
+# Clean up and final report
+SERIAL_WRITE "[*] Generating final report..."
+LED CLEANUP
+
+killall tcpdump 2>/dev/null
+killall nmap 2>/dev/null
+
+# Generate summary report
+echo "============================================" > $LOOT_DIR_SCAN/SUMMARY.txt
+echo "SCAN SUMMARY" >> $LOOT_DIR_SCAN/SUMMARY.txt
+echo "============================================" >> $LOOT_DIR_SCAN/SUMMARY.txt
+echo "Date: $SCAN_TIME" >> $LOOT_DIR_SCAN/SUMMARY.txt
+echo "SJC IP: $IP" >> $LOOT_DIR_SCAN/SUMMARY.txt
+echo "Gateway: $GATEWAY" >> $LOOT_DIR_SCAN/SUMMARY.txt
+echo "Subnet: $SUBNET" >> $LOOT_DIR_SCAN/SUMMARY.txt
+echo "Hosts Found: $HOST_COUNT" >> $LOOT_DIR_SCAN/SUMMARY.txt
+echo "Primary Target: $TARGET_IP" >> $LOOT_DIR_SCAN/SUMMARY.txt
+echo "============================================" >> $LOOT_DIR_SCAN/SUMMARY.txt
+
+SERIAL_WRITE "[*] Scan complete. Results saved to $LOOT_DIR_SCAN and $LOOT_DIR_AUDIT"
+SERIAL_WRITE "[*] Files generated:"
+SERIAL_WRITE "    - network_info.txt"
+SERIAL_WRITE "    - alive_hosts.txt"
+SERIAL_WRITE "    - deep_scan.txt"
+SERIAL_WRITE "    - gateway_scan.txt"
+SERIAL_WRITE "    - detailed_audit_*.txt"
+SERIAL_WRITE "    - mdns_devices.txt"
+SERIAL_WRITE "    - arp_traffic.txt"
+SERIAL_WRITE "    - http_traffic.txt"
+SERIAL_WRITE "    - SUMMARY.txt"
+
+LED FINISH
 ```
 
 ---
@@ -153,7 +321,7 @@ ntpd -n -q -p pool.ntp.org
 2. Flip the switch to **Attack Mode**
    (switch away from the USB-C connector).
 3. The script will execute automatically.
-4. Wait for `LED FINISH` (solid green) before unplugging and Serial message stating that scan is completed.
+4. Wait for `LED FINISH` before unplugging and Serial message stating that scan is completed.
 
 ---
 
@@ -267,7 +435,7 @@ Read the `Penetration testing research report (Shark)` file to learn more about 
 4. MITRE Corporation. (2024). *T1046: Network Service Scanning*.
    https://attack.mitre.org/techniques/T1046/
 
-5. MITRE Corporation. (2024). *T1557: Man-in-the-Middle*.
+5. MITRE Corporation. (2024). *T1557: Man-in-the-Middle* ( ARP spoofing case ).
    https://attack.mitre.org/techniques/T1557/
 
 6. Microsoft. (2023). *Remote NDIS (RNDIS) Design Guide*.
@@ -282,15 +450,8 @@ Read the `Penetration testing research report (Shark)` file to learn more about 
 9. Internet Engineering Task Force. (1982). *RFC 826: ARP*.
    https://datatracker.ietf.org/doc/html/rfc826
 
-10. OWASP Foundation. (2024). *Vulnerability Scanning*.
-    https://owasp.org/www-community/Vulnerability_Scanning
-
 ---
 
 ## Author
 
 **Szymon Stefański**
-
-## License
-This project is for **educational use only**.
-Redistribution or use in unauthorized environments is strictly prohibited.
