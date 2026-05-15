@@ -40,5 +40,4 @@ An interactive, menu-driven Bash dashboard accessible via SSH. It acts as the co
 │   ├── payload_cpp.txt                  # DuckyScript/MATCH payload for C++ boilerplate
 │   └── payload_alert.txt                # MATCH payload for educational Discord exfiltration
 └── Demonstration
-    ├── Hak5_KeyCroc_Presentation_PL.pdf   # Slide deck (Polish version)
-    └── Hak5_KeyCroc_Presentation_ENG.pdf  # Slide deck (English version)
+    └── Presentation_ENG.pdf  # Slide deck (English version)
