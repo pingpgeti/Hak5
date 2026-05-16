@@ -1,0 +1,24 @@
+MATCH !cpp # activator
+
+# clearing activator
+QUACK BACKSPACE
+QUACK BACKSPACE
+QUACK BACKSPACE
+QUACK BACKSPACE
+
+QUACK DELAY 100
+
+# writing code
+QUACK STRING '#include <iostream>'
+QUACK ENTER
+QUACK STRING 'using namespace std;'
+QUACK ENTER
+QUACK ENTER
+QUACK STRING 'int main() {'
+QUACK ENTER
+QUACK STRING     'cout << "Hello World!";'
+QUACK ENTER
+QUACK STRING     'return 0;'
+QUACK ENTER
+QUACK STRING '}'
+QUACK ENTER
