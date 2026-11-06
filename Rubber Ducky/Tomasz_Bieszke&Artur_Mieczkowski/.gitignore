@@ -1,0 +1,11 @@
+*.exe
+/venv
+/.venv
+/userLogs
+/idea
+/.idea
+/server/.idea
+log.txt
+__pycache__/
+client/vska/
+server/userLogs/macie.txt
